@@ -22,11 +22,48 @@ const createScene = async function (engine, canvas) {
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // 4. Création d'un Sol (pour se déplacer dessus)
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
-    ground.material = new BABYLON.StandardMaterial("groundMat", scene);
-    ground.material.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1);
+    // ... (Début de la fonction createScene) ...
 
+    // 4. Création d'un Sol et Murs (Déjà fait)
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
+    // ... murs, etc.
+
+    // 5. 🧑‍⚕️ Chargement Asynchrone du Modèle du Patient
+    try {
+        // Le premier argument ("") signifie charger tous les meshes du fichier.
+        // Le deuxième argument ("assets/") est le chemin d'accès au dossier.
+        // Le troisième argument ("patient_modele.glb") est le nom du fichier du modèle.
+        const patientMesh = await BABYLON.SceneLoader.ImportMeshAsync(
+            "", 
+            "assets/", 
+            "scifi_girl_v.01 (1).glb", 
+            scene
+        );
+
+        // Récupérer le conteneur racine du modèle chargé
+        const rootMesh = patientMesh.meshes[0];
+
+        // Positionner le patient dans la salle de consultation
+        rootMesh.position = new BABYLON.Vector3(0, 0, 3); // Devant la caméra initiale
+        
+        // Mettre à l'échelle (si le modèle est trop grand ou trop petit)
+        rootMesh.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
+
+        console.log("Modèle du patient chargé avec succès !");
+
+        // Assigner le mesh principal pour les interactions
+        // Ceci est important pour détecter quand le joueur clique sur le patient
+        rootMesh.name = "PATIENT_MESH_RACINE"; 
+
+    } catch (error) {
+        console.error("Erreur lors du chargement du modèle du patient:", error);
+        // Vous pouvez ajouter ici un Mesh de secours pour signaler l'erreur
+        const errorBox = BABYLON.MeshBuilder.CreateBox("errorBox", { size: 1 }, scene);
+        errorBox.position = new BABYLON.Vector3(0, 0.5, 3);
+    }
+
+    // ... (Reste de la fonction, comme la gestion des pointeurs) ...
+    
     // 5. Simuler le Cabinet (un mur simple pour l'exemple)
     const wall = BABYLON.MeshBuilder.CreateBox("wall", {width: 10, height: 3, depth: 0.1}, scene);
     wall.position = new BABYLON.Vector3(0, 1.5, 5); // Mur au fond
