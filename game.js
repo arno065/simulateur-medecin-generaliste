@@ -99,6 +99,17 @@ const createScene = async function (engine, canvas) {
 
 // --- Initialisation du Moteur Babylon ---
 window.addEventListener('DOMContentLoaded', async function(){
+    // ... (Initialisation du moteur) ...
+
+    const modal = document.getElementById('consultation-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const hudPatientName = document.getElementById('patient-name-hud');
+
+    let isConsultationActive = false; // Pour éviter de bouger la caméra pendant la consultation
+    let currentPatientName = "Marc Dupont"; // Récupéré de la donnée patient
+
+    // ... (Reste du code) ...
+    
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true); 
 
