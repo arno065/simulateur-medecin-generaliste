@@ -1,3 +1,24 @@
+let scenarios = [];
+let currentScenario = null;
+
+async function loadScenarios() {
+    try {
+        const response = await fetch('data/scenarios.json');
+        scenarios = await response.json();
+        
+        // Initialiser avec le premier cas (ou un cas aléatoire)
+        currentScenario = scenarios[0];
+        
+        // Mettre à jour le nom initial du patient dans la 3D
+        currentPatientName = currentScenario.name; 
+        console.log(`Scénario chargé : ${currentScenario.real_pathology}`);
+    } catch (error) {
+        console.error("Erreur lors du chargement des scénarios:", error);
+    }
+}
+
+// Appeler au démarrage du script
+loadScenarios();
 
 // Fonction asynchrone pour initialiser le moteur de jeu
 const createScene = async function (engine, canvas) {
