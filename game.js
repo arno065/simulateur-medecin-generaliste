@@ -68,17 +68,31 @@ const createScene = async function (engine, canvas) {
     const wall = BABYLON.MeshBuilder.CreateBox("wall", {width: 10, height: 3, depth: 0.1}, scene);
     wall.position = new BABYLON.Vector3(0, 1.5, 5); // Mur au fond
 
+    // Dans la fonction createScene, modifiez la gestion du clic (scene.onPointerDown) :
+
     // 6. Gestion des Interactions (Pointer et Clic)
     scene.onPointerDown = function (evt) {
         if (evt.button === 0) { // Clic gauche
             const pickResult = scene.pick(scene.pointerX, scene.pointerY);
             if (pickResult.hit) {
-                console.log("Objet cliqué : ", pickResult.pickedMesh.name);
-                // C'est ici que la logique d'interaction se passerait
-                // Exemple : Si pickResult.pickedMesh.name === "patient", démarrer l'examen.
+                const pickedMesh = pickResult.pickedMesh;
+                console.log("Objet cliqué : ", pickedMesh.name);
+
+                // 🎯 Logique d'Interaction avec le Patient 
+                if (pickedMesh.name.includes("PATIENT_MESH_RACINE") || pickedMesh.parent && pickedMesh.parent.name.includes("PATIENT_MESH_RACINE")) {
+                    alert("Interaction : Vous examinez le patient !");
+                    // Déclencher une interface 2D (HUD) pour choisir des examens ou poser des questions.
+                }
+                
+                // Logique pour d'autres objets (ex: une trousse, un dossier)
+                if (pickedMesh.name === "dossier_medical") {
+                    // Ouvrir l'historique du patient
+                }
             }
         }
     };
+// ...
+
 
     return scene;
 };
