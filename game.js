@@ -180,6 +180,19 @@ window.addEventListener('DOMContentLoaded', async function(){
                 // Si l'objet cliqué est le patient
                 if (pickedMesh.name.includes("PATIENT_MESH_RACINE") || pickedMesh.parent && pickedMesh.parent.name.includes("PATIENT_MESH_RACINE")) {
                     openConsultationModal(currentPatientName); // Ouvrir la modale !
+                    function openConsultationModal() {
+    // ... code d'affichage de la modale
+    
+    // Mettre à jour les informations du HUD
+    document.getElementById('patient-name-hud').textContent = currentScenario.name;
+    
+    const examenLog = document.getElementById('examen-log');
+    examenLog.innerHTML = `<p>Patient : ${currentScenario.consultation_data.initial_dialogue}</p>`;
+    examenLog.scrollTop = examenLog.scrollHeight; 
+    
+    // Désactiver le bouton "Interroger" s'il n'y a plus de questions à poser (logique plus tardive)
+                    }
+                    
                 }
             }
     });
