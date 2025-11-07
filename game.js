@@ -249,6 +249,76 @@ cancelDiagnosisBtn.addEventListener('click', () => {
     diagnosticModal.classList.add('hidden');
     document.getElementById('consultation-modal').classList.remove('hidden');
 });
+    function evaluateDiagnosis(playerPathology, playerTreatment) {
+    const evaluation = currentScenario.diagnosis_evaluation;
+    let score = 0;
+    let feedback = "";
+    
+    // 1. Évaluation du Diagnostic (Pathologie)
+    if (playerPathology.toLowerCase().includes(evaluation.correct_diagnosis.toLowerCase())) {
+        score += 50;
+        feedback += "✅ Diagnostic Correct (50 points).<br>";
+    } else {
+        feedback += `❌ Diagnostic Incorrect. Le diagnostic réel était : ${evaluation.correct_diagnosis}.<br>`;
+    }
+    
+    // 2. Évaluation du Traitement (Prescription)
+    let mandatoryScore = 0;
+    evaluation.treatment.mandatory.forEach(mandate => {
+        if (playerTreatment.toLowerCase().includes(mandate.toLowerCase())) {
+            mandatoryScore += 20;
+            score += 20;
+            feedback += `⭐ Prescription essentielle incluse : ${mandate} (+20 points).<br>`;
+        }
+    });
+
+    // Pénalité si des traitements essentiels manquent
+    if (mandatoryScore < evaluation.treatment.mandatory.length * 20) {
+        feedback += "⚠️ Attention : Des prescriptions essentielles ont été oubliées.<br>";
+    }
+
+    // 3. Évaluation des Surobservations/Erreurs (Exemple : donner des antibiotiques pour un virus)
+    const incorrectTreatment = "antibiotique"; // Exemple d'erreur courante
+    if (playerTreatment.toLowerCase().includes(incorrectTreatment)) {
+        score -= 30; // Pénalité sévère
+        feedback += `🛑 Erreur grave : Vous avez prescrit un ${incorrectTreatment} pour une infection virale (-30 points).<br>`;
+    }
+
+    // --- Affichage du Résultat ---
+    const finalScore = Math.max(0, score); // Le score ne peut pas être négatif
+    feedback += `<br><strong>Score Final : ${finalScore} / 100</strong>`;
+
+    if (finalScore >= 80) {
+        feedback += `<br>Félicitations ! Prise en charge excellente. 💯`;
+    } else if (finalScore >= 50) {
+        feedback += `<br>Bien joué. Diagnostic correct, mais la prescription pourrait être améliorée.`;
+    } else {
+        feedback += `<br>Le patient n'est pas guéri. Veuillez revoir vos fondamentaux médicaux.`;
+    }
+    
+    return feedback;
+}
+
+// --- Gestion de la Soumission du Formulaire ---
+diagnosisForm.addEventListener('submit', (e) => {
+    e.preventDefault(); // Empêcher l'envoi classique du formulaire
+    
+    const pathology = document.getElementById('input-pathology').value.trim();
+    const prescription = document.getElementById('input-prescription').value.trim();
+    const feedbackDiv = document.getElementById('scoring-feedback');
+    
+    // Calculer le score
+    const resultFeedback = evaluateDiagnosis(pathology, prescription);
+    
+    // Afficher le résultat
+    feedbackDiv.innerHTML = resultFeedback;
+    
+    // Désactiver le bouton de soumission après la première tentative
+    document.getElementById('submit-diagnosis-btn').disabled = true;
+    
+    // Afficher le bouton pour passer au patient suivant (ou retourner au cabinet 3D)
+    document.getElementById('cancel-diagnosis-btn').textContent = "Patient Suivant / Fin de Partie"; 
+});
     
 });
                         
