@@ -1,61 +1,103 @@
+/* --- BASE & CANVAS 3D (Mise en page plein écran) --- */
 html, body {
-    overflow: hidden; /* Supprimer les barres de défilement */
+    overflow: hidden; /* Empêche les barres de défilement */
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #000; /* Fond noir si la 3D ne charge pas */
 }
 
 #renderCanvas {
     width: 100%;
     height: 100%;
-    touch-action: none; /* Nécessaire pour les interactions tactiles sur mobile */
+    touch-action: none; 
+    display: block; /* Assure que le canvas prend toute la place */
 }
 
+/* --- HUD DE DÉPART (Boutons simples toujours visibles) --- */
 #hud-interface {
     position: absolute;
     top: 10px;
     right: 10px;
-    z-index: 10;
-    /* Styles pour rendre le HUD visible */
+    z-index: 20; /* Plus haut que le canvas (1) et les modales (100) pour certains éléments permanents */
 }
-/* --- Styles du HUD Modale --- */
-#consultation-modal {
-    position: fixed; /* Reste au-dessus de tout */
-    z-index: 100;    /* Assurez-vous qu'il est au-dessus du canvas 3D (z-index: 1) */
+
+/* --- STRUCTURE DES MODALES (Consultation & Diagnostic) --- */
+
+/* Appliquer les styles fixes et le fond semi-transparent aux deux modales */
+#consultation-modal, #diagnostic-modal {
+    position: fixed; /* Reste au-dessus de tout, même si on scrollait */
+    z-index: 100;    
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Fond semi-transparent */
+    background-color: rgba(0, 0, 0, 0.8); /* Fond plus sombre pour l'immersion */
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+/* Contenu Centré (commun aux deux modales) */
 .modal-content {
     background-color: white;
     padding: 30px;
     border-radius: 10px;
-    width: 80%;
-    max-width: 700px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%; /* Augmenté légèrement pour le mobile */
+    max-width: 750px; /* Légèrement plus grand pour les formulaires */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
     color: #333;
+    animation: fadeIn 0.3s ease-out; /* Ajout d'une petite animation */
 }
 
+/* --- ÉLÉMENTS SPÉCIFIQUES --- */
 #examen-log {
-    border: 1px solid #ddd;
+    border: 1px solid #007bff; /* Bordure plus claire pour le log */
     padding: 15px;
     height: 150px;
     overflow-y: auto;
     margin-bottom: 20px;
-    background-color: #f9f9f9;
+    background-color: #f0f8ff; /* Très léger bleu pour le log */
+    border-radius: 5px;
 }
 
-#medical-actions button {
-    margin-right: 10px;
+#medical-actions button, #diagnosis-form button {
+    padding: 10px 15px;
+    margin: 8px 10px 8px 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    font-size: 14px;
+    transition: background-color 0.2s;
 }
 
+/* Styles pour les boutons de formulaire */
+#diagnosis-form input[type="text"], #diagnosis-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Assure que le padding n'augmente pas la taille totale */
+}
+
+/* Bouton pour revenir/annuler (style secondaire) */
+.close-btn, #cancel-diagnosis-btn {
+    background-color: #6c757d !important;
+}
+
+/* --- CLASSE DE CONTRÔLE JS --- */
 .hidden {
-    display: none; /* Classe utilisée par JS pour masquer/afficher */
+    /* CLASSE CRUCIALE: Masque l'élément et l'enlève du flux */
+    display: none !important; 
+}
+
+/* Animation simple pour une meilleure transition */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
