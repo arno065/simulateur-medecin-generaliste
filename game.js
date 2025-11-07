@@ -5,10 +5,10 @@
 let scenarios = [];
 let currentScenario = null;
 let isConsultationActive = false;
-let scene; // Déclaré globalement pour Babylon
-let canvas; // Déclaré globalement pour Babylon
+let scene;
+let canvas;
 
-// Éléments du DOM : Le script plante si l'un de ces ID n'est pas dans index.html !
+// Éléments du DOM (Assurez-vous que ces ID correspondent à index.html)
 const consultationModal = document.getElementById('consultation-modal');
 const diagnosticModal = document.getElementById('diagnostic-modal');
 const hudPatientName = document.getElementById('patient-name-hud');
@@ -40,7 +40,6 @@ async function loadScenarios() {
         
     } catch (error) {
         console.error("ERREUR FATALE: Le chargement des scénarios a échoué. Le jeu ne peut pas démarrer la logique.", error);
-        // Afficher un message d'erreur sur l'écran si possible
     }
 }
 
@@ -149,13 +148,12 @@ tempBtn.addEventListener('click', () => {
 });
 
 
-// --- Fonction d'Évaluation du Diagnostic ---
+// --- Fonction d'Évaluation du Diagnostic (inchangée) ---
 function evaluateDiagnosis(playerPathology, playerTreatment) {
     const evaluation = currentScenario.diagnosis_evaluation;
     let score = 0;
     let feedback = "";
     
-    // 1. Évaluation du Diagnostic (Pathologie)
     if (playerPathology.toLowerCase().includes(evaluation.correct_diagnosis.toLowerCase())) {
         score += 50;
         feedback += "✅ Diagnostic Correct (50 points).<br>";
@@ -163,7 +161,6 @@ function evaluateDiagnosis(playerPathology, playerTreatment) {
         feedback += `❌ Diagnostic Incorrect. Le diagnostic réel était : ${evaluation.correct_diagnosis}.<br>`;
     }
     
-    // 2. Évaluation du Traitement (Prescription)
     let mandatoryScore = 0;
     evaluation.treatment.mandatory.forEach(mandate => {
         if (playerTreatment.toLowerCase().includes(mandate.toLowerCase())) {
@@ -177,14 +174,12 @@ function evaluateDiagnosis(playerPathology, playerTreatment) {
         feedback += "⚠️ Attention : Des prescriptions essentielles ont été oubliées.<br>";
     }
 
-    // 3. Pénalité pour surtraitement (Antibiotique pour virus)
     const incorrectTreatment = "antibiotique"; 
     if (playerTreatment.toLowerCase().includes(incorrectTreatment)) {
         score -= 30; 
         feedback += `🛑 Erreur grave : Prescription d'un ${incorrectTreatment} pour une infection virale (-30 points).<br>`;
     }
 
-    // --- Affichage du Résultat ---
     const finalScore = Math.max(0, score); 
     feedback += `<br><strong>Score Final : ${finalScore} / 100</strong>`;
 
@@ -210,10 +205,9 @@ diagnosisForm.addEventListener('submit', (e) => {
 
 
 // ====================================================================
-// 5. INITIALISATION DU MOTEUR 3D BABYLON (Si vous voulez réactiver la 3D)
+// 5. INITIALISATION DU MOTEUR 3D BABYLON (Correction du nom de fichier)
 // ====================================================================
 
-// Fonction asynchrone pour initialiser le moteur de jeu
 const createScene = async function (engine, canvas) {
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color3(0.7, 0.9, 1); 
@@ -230,11 +224,13 @@ const createScene = async function (engine, canvas) {
     ground.material = new BABYLON.StandardMaterial("groundMat", scene);
     ground.material.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1);
     
-    // Tentez de charger votre modèle 3D
+    // CORRECTION ICI : Utilisation de 'patiente.glb'
     try {
-        await BABYLON.SceneLoader.ImportMeshAsync("", "assets/", "scifi_girl_v.01 (1).glb", scene);
+        await BABYLON.SceneLoader.ImportMeshAsync("", "assets/", "patiente.glb", scene);
+        console.log("Modèle 3D patiente.glb chargé avec succès.");
     } catch (error) {
-        console.error("Erreur de chargement du modèle 3D. Le jeu continuera sans 3D interactive.", error);
+        console.error("ERREUR de chargement du modèle 3D (patiente.glb) :", error);
+        // Si le chargement échoue, la 3D sera limitée, mais la logique HUD doit continuer.
     }
     
     // Gestion du clic sur le patient en 3D
@@ -245,7 +241,6 @@ const createScene = async function (engine, canvas) {
             const pickResult = scene.pick(scene.pointerX, scene.pointerY);
             if (pickResult.hit) {
                 const pickedMesh = pickResult.pickedMesh;
-                // Logique pour identifier le patient
                 if (pickedMesh.name.includes("PATIENT_MESH") || pickedMesh.parent && pickedMesh.parent.name.includes("PATIENT_MESH")) {
                     openConsultationModal(); 
                 }
@@ -263,31 +258,27 @@ const createScene = async function (engine, canvas) {
 
 window.addEventListener('DOMContentLoaded', async function(){
     
-    // Étape 1: Tenter de charger les données vitales
     await loadScenarios(); 
 
-    // Étape 2: Initialisation de la 3D
     canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true); 
 
     scene = await createScene(engine, canvas);
 
-    // Boucle de rendu
     engine.runRenderLoop(function () {
         scene.render();
     });
 
-    // Gestion du redimensionnement
     window.addEventListener("resize", function () {
         engine.resize();
     });
 
-    // Étape 3: Démarrez la consultation (si la 3D ne fonctionne pas, ça assure que le HUD apparaît)
-    // Au début, on ouvre la modale de consultation directement pour le premier patient.
-    // Si la 3D fonctionne, commentez cette ligne et laissez le clic 3D gérer l'ouverture.
-    if (!currentScenario) {
-        console.error("Le jeu est bloqué car les données sont manquantes.");
-    } else {
+    // Démarre la consultation directement si les données sont chargées
+    if (currentScenario) {
         openConsultationModal();
+    } else {
+        // Affiche une erreur si les données JSON n'ont pas pu être lues
+        console.error("Le jeu est bloqué car les données (scenarios.json) sont manquantes ou incorrectes.");
+        document.body.innerHTML = "<h1>Erreur Critique: Fichier scenarios.json introuvable ou incorrect.</h1>";
     }
 });
