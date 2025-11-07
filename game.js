@@ -1,18 +1,20 @@
 // ====================================================================
-// 1. DÉCLARATION DES VARIABLES GLOBALES ET INITIALISATION DES DONNÉES
+// 1. DÉCLARATION DES VARIABLES GLOBALES ET ÉLÉMENTS DU DOM
 // ====================================================================
 
 let scenarios = [];
 let currentScenario = null;
-let isConsultationActive = false; // Pour éviter de bouger la caméra pendant la consultation
+let isConsultationActive = false;
+let scene; // Déclaré globalement pour Babylon
+let canvas; // Déclaré globalement pour Babylon
 
-// Éléments du DOM (Déclarés ici pour être accessibles par plusieurs fonctions)
+// Éléments du DOM : Le script plante si l'un de ces ID n'est pas dans index.html !
 const consultationModal = document.getElementById('consultation-modal');
 const diagnosticModal = document.getElementById('diagnostic-modal');
 const hudPatientName = document.getElementById('patient-name-hud');
 const examenLog = document.getElementById('examen-log');
 
-// Boutons principaux
+// Boutons
 const closeModalBtn = document.getElementById('close-modal-btn');
 const poseDiagnosticBtn = document.getElementById('diagnose-btn-hud');
 const cancelDiagnosisBtn = document.getElementById('cancel-diagnosis-btn');
@@ -21,29 +23,38 @@ const askSymptomsBtn = document.getElementById('ask-symptoms-btn');
 const tempBtn = document.getElementById('temp-btn');
 
 
-// --- Chargement des Scénarios ---
+// ====================================================================
+// 2. LOGIQUE DE CHARGEMENT DES DONNÉES
+// ====================================================================
+
 async function loadScenarios() {
     try {
-        // NOTE: Assurez-vous que le fichier 'data/scenarios.json' existe.
         const response = await fetch('data/scenarios.json');
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}. Vérifiez l'existence de data/scenarios.json.`);
+        }
         scenarios = await response.json();
         
-        currentScenario = scenarios[0];
+        currentScenario = scenarios[0]; // Démarre avec le premier cas
         console.log(`Scénario chargé : ${currentScenario.real_pathology}`);
         
     } catch (error) {
-        console.error("Erreur lors du chargement des scénarios:", error);
+        console.error("ERREUR FATALE: Le chargement des scénarios a échoué. Le jeu ne peut pas démarrer la logique.", error);
+        // Afficher un message d'erreur sur l'écran si possible
     }
 }
 
 
 // ====================================================================
-// 2. LOGIQUE D'AFFICHAGE DU HUD (GESTION DES MODALES)
+// 3. GESTION DES MODALES (HUD)
 // ====================================================================
 
 // --- Fonction pour ouvrir la modale de CONSULTATION ---
 function openConsultationModal() {
-    if (!currentScenario) return; // Sécurité si les données n'ont pas chargé
+    if (!currentScenario) {
+        alert("Erreur: Données patient non chargées.");
+        return;
+    }
 
     consultationModal.classList.remove('hidden');
     hudPatientName.textContent = currentScenario.name;
@@ -52,7 +63,7 @@ function openConsultationModal() {
     // Initialiser le log avec le dialogue
     examenLog.innerHTML = `<p class="patient-line">Patient : ${currentScenario.consultation_data.initial_dialogue}</p>`;
     
-    // Si la 3D est initialisée, détacher le contrôle de la caméra
+    // Si la 3D est active, détacher le contrôle de la caméra
     if (scene && scene.activeCamera) {
         scene.activeCamera.detachControl(canvas);
     }
@@ -64,7 +75,7 @@ function closeConsultationModal() {
     consultationModal.classList.add('hidden');
     isConsultationActive = false;
     
-    // Si la 3D est initialisée, rattacher le contrôle
+    // Si la 3D est active, rattacher le contrôle
     if (scene && scene.activeCamera) {
         scene.activeCamera.attachControl(canvas, true);
     }
@@ -73,77 +84,77 @@ function closeConsultationModal() {
 
 // --- Fonction pour ouvrir la modale de DIAGNOSTIC ---
 function openDiagnosticModal() {
-    consultationModal.classList.add('hidden'); // Cacher la modale de consultation
-    diagnosticModal.classList.remove('hidden'); // Afficher la modale de diagnostic
+    consultationModal.classList.add('hidden'); 
+    diagnosticModal.classList.remove('hidden'); 
 }
 
 // --- Fonction pour annuler le diagnostic et revenir à la consultation ---
 function cancelDiagnosis() {
     diagnosticModal.classList.add('hidden');
     consultationModal.classList.remove('hidden');
-    // Réinitialiser les champs et le feedback (si nécessaire)
-    document.getElementById('input-pathology').value = "";
-    document.getElementById('input-prescription').value = "";
+    
+    // Réinitialiser le formulaire
+    diagnosisForm.reset();
     document.getElementById('scoring-feedback').innerHTML = "";
     document.getElementById('submit-diagnosis-btn').disabled = false;
+    document.getElementById('cancel-diagnosis-btn').textContent = "❌ Annuler et Continuer l'Examen";
 }
+
+// Lier les événements aux boutons du HUD
+closeModalBtn.addEventListener('click', closeConsultationModal); 
+poseDiagnosticBtn.addEventListener('click', openDiagnosticModal); 
+cancelDiagnosisBtn.addEventListener('click', cancelDiagnosis); 
 
 
 // ====================================================================
-// 3. LOGIQUE MÉDICALE (GESTION DES BOUTONS DU HUD)
+// 4. LOGIQUE MÉDICALE ET SCORING
 // ====================================================================
 
 // --- Logique pour Interroger ---
 askSymptomsBtn.addEventListener('click', () => {
-    // Le code de cette fonction est bien écrit, il suffit de le placer ici :
-    if (currentScenario && currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"]) {
-        
-        examenLog.innerHTML += `<p class="doctor-action">Vous : Pouvez-vous détailler vos symptômes ?</p>`;
-        
-        currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"].forEach(info => {
-            examenLog.innerHTML += `<p class="patient-response">Patient : ${info}</p>`;
-        });
-        
-        // Supprimer la question une fois qu'elle a été posée pour le réalisme
-        delete currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"];
-        askSymptomsBtn.disabled = true; 
-        
-        examenLog.scrollTop = examenLog.scrollHeight;
-    } else {
+    if (!currentScenario || !currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"]) {
         examenLog.innerHTML += `<p class="system-message">Vous avez déjà posé toutes les questions pertinentes sur les symptômes.</p>`;
+        return;
     }
+    
+    // Afficher les réponses stockées dans le JSON
+    examenLog.innerHTML += `<p class="doctor-action">Vous : Pouvez-vous détailler vos symptômes ?</p>`;
+    currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"].forEach(info => {
+        examenLog.innerHTML += `<p class="patient-response">Patient : ${info}</p>`;
+    });
+    
+    // Désactiver le bouton et simuler la "consommation" de l'information
+    delete currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"];
+    askSymptomsBtn.disabled = true; 
+    
+    examenLog.scrollTop = examenLog.scrollHeight;
 });
 
 // --- Logique pour Prendre la Température ---
 tempBtn.addEventListener('click', () => {
-    // Le code de cette fonction est bien écrit, il suffit de le placer ici :
-    if (currentScenario && currentScenario.consultation_data.exam_results["Prendre la Température"]) {
-        const result = currentScenario.consultation_data.exam_results["Prendre la Température"];
-        
-        examenLog.innerHTML += `<p class="doctor-action">Vous prenez la température du patient...</p>`;
-        examenLog.innerHTML += `<p class="system-message">Résultat de la mesure (${result.result}) : ${result.message}</p>`;
-        
-        tempBtn.disabled = true;
-        
-        examenLog.scrollTop = examenLog.scrollHeight;
+    if (!currentScenario || !currentScenario.consultation_data.exam_results["Prendre la Température"]) {
+        examenLog.innerHTML += `<p class="system-message">Vous avez déjà effectué cet examen.</p>`;
+        return;
     }
+    const result = currentScenario.consultation_data.exam_results["Prendre la Température"];
+    
+    examenLog.innerHTML += `<p class="doctor-action">Vous prenez la température du patient...</p>`;
+    examenLog.innerHTML += `<p class="system-message">Résultat de la mesure (${result.result}) : ${result.message}</p>`;
+    
+    // Supprimer l'information pour éviter la redondance dans les données du scénario
+    delete currentScenario.consultation_data.exam_results["Prendre la Température"];
+    tempBtn.disabled = true;
+    
+    examenLog.scrollTop = examenLog.scrollHeight;
 });
 
-// Lier les boutons d'affichage/fermeture des modales
-closeModalBtn.addEventListener('click', closeConsultationModal); // Fermer la modale consultation
-poseDiagnosticBtn.addEventListener('click', openDiagnosticModal); // Ouvrir la modale diagnostic
-cancelDiagnosisBtn.addEventListener('click', cancelDiagnosis); // Annuler le diagnostic
 
-// --- Fonction d'Évaluation du Diagnostic (à conserver intacte) ---
+// --- Fonction d'Évaluation du Diagnostic ---
 function evaluateDiagnosis(playerPathology, playerTreatment) {
     const evaluation = currentScenario.diagnosis_evaluation;
     let score = 0;
     let feedback = "";
     
-    // ... (Code de scoring inchangé, car il était correct) ...
-    // NOTE : Assurez-vous que le JSON contient la structure 'diagnosis_evaluation' !
-    // ...
-
     // 1. Évaluation du Diagnostic (Pathologie)
     if (playerPathology.toLowerCase().includes(evaluation.correct_diagnosis.toLowerCase())) {
         score += 50;
@@ -162,30 +173,21 @@ function evaluateDiagnosis(playerPathology, playerTreatment) {
         }
     });
 
-    // Pénalité si des traitements essentiels manquent
     if (mandatoryScore < evaluation.treatment.mandatory.length * 20) {
         feedback += "⚠️ Attention : Des prescriptions essentielles ont été oubliées.<br>";
     }
 
-    // 3. Évaluation des Surobservations/Erreurs (Exemple : donner des antibiotiques pour un virus)
+    // 3. Pénalité pour surtraitement (Antibiotique pour virus)
     const incorrectTreatment = "antibiotique"; 
     if (playerTreatment.toLowerCase().includes(incorrectTreatment)) {
         score -= 30; 
-        feedback += `🛑 Erreur grave : Vous avez prescrit un ${incorrectTreatment} pour une infection virale (-30 points).<br>`;
+        feedback += `🛑 Erreur grave : Prescription d'un ${incorrectTreatment} pour une infection virale (-30 points).<br>`;
     }
 
     // --- Affichage du Résultat ---
     const finalScore = Math.max(0, score); 
     feedback += `<br><strong>Score Final : ${finalScore} / 100</strong>`;
 
-    if (finalScore >= 80) {
-        feedback += `<br>Félicitations ! Prise en charge excellente. 💯`;
-    } else if (finalScore >= 50) {
-        feedback += `<br>Bien joué. Diagnostic correct, mais la prescription pourrait être améliorée.`;
-    } else {
-        feedback += `<br>Le patient n'est pas guéri. Veuillez revoir vos fondamentaux médicaux.`;
-    }
-    
     return feedback;
 }
 
@@ -208,33 +210,31 @@ diagnosisForm.addEventListener('submit', (e) => {
 
 
 // ====================================================================
-// 4. INITIALISATION DU MOTEUR 3D BABYLON (Si vous voulez réactiver la 3D)
+// 5. INITIALISATION DU MOTEUR 3D BABYLON (Si vous voulez réactiver la 3D)
 // ====================================================================
-
-let scene;
-let canvas;
 
 // Fonction asynchrone pour initialiser le moteur de jeu
 const createScene = async function (engine, canvas) {
     scene = new BABYLON.Scene(engine);
-    // ... (Reste de la configuration de la scène, caméra, lumière, murs, etc.) ...
+    scene.clearColor = new BABYLON.Color3(0.7, 0.9, 1); 
 
-    // NOTE: Le chargement du modèle est TRÈS sensible.
-    // patient_modele.glb doit être le nom exact.
+    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.8, -5), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.attachControl(canvas, true);
+    camera.keysUp = [90]; camera.keysDown = [83]; camera.keysLeft = [81]; camera.keysRight = [68]; camera.speed = 0.5;
+
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.7;
+
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
+    ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+    ground.material.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.1);
+    
+    // Tentez de charger votre modèle 3D
     try {
-        const patientMesh = await BABYLON.SceneLoader.ImportMeshAsync(
-            "", 
-            "assets/", 
-            "scifi_girl_v.01 (1).glb", 
-            scene
-        );
-        const rootMesh = patientMesh.meshes[0];
-        rootMesh.name = "PATIENT_MESH_RACINE"; 
-        rootMesh.position = new BABYLON.Vector3(0, 0, 3);
-        rootMesh.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-        console.log("Modèle du patient chargé !");
+        await BABYLON.SceneLoader.ImportMeshAsync("", "assets/", "scifi_girl_v.01 (1).glb", scene);
     } catch (error) {
-        console.error("Erreur lors du chargement du modèle 3D :", error);
+        console.error("Erreur de chargement du modèle 3D. Le jeu continuera sans 3D interactive.", error);
     }
     
     // Gestion du clic sur le patient en 3D
@@ -245,8 +245,9 @@ const createScene = async function (engine, canvas) {
             const pickResult = scene.pick(scene.pointerX, scene.pointerY);
             if (pickResult.hit) {
                 const pickedMesh = pickResult.pickedMesh;
-                if (pickedMesh.name.includes("PATIENT_MESH_RACINE") || pickedMesh.parent && pickedMesh.parent.name.includes("PATIENT_MESH_RACINE")) {
-                    openConsultationModal(); // Ouvre la modale de consultation
+                // Logique pour identifier le patient
+                if (pickedMesh.name.includes("PATIENT_MESH") || pickedMesh.parent && pickedMesh.parent.name.includes("PATIENT_MESH")) {
+                    openConsultationModal(); 
                 }
             }
         }
@@ -256,29 +257,37 @@ const createScene = async function (engine, canvas) {
 };
 
 
-// --- Démarrage principal au chargement de la page ---
+// ====================================================================
+// 6. DÉMARRAGE PRINCIPAL
+// ====================================================================
+
 window.addEventListener('DOMContentLoaded', async function(){
     
-    // Si la 3D ne fonctionne pas, décommentez LIGNE 1 pour afficher la modale directement au départ :
-    // openConsultationModal(); 
-    
-    await loadScenarios(); // Charge les données AVANT d'initialiser le moteur 3D
+    // Étape 1: Tenter de charger les données vitales
+    await loadScenarios(); 
 
+    // Étape 2: Initialisation de la 3D
     canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true); 
 
     scene = await createScene(engine, canvas);
 
-    // Boucle de rendu pour l'animation
+    // Boucle de rendu
     engine.runRenderLoop(function () {
         scene.render();
     });
 
-    // Gestion du redimensionnement de la fenêtre
+    // Gestion du redimensionnement
     window.addEventListener("resize", function () {
         engine.resize();
     });
 
-    // Optionnel : Ouvrir la consultation directement si vous n'avez pas de 3D fonctionnelle pour le moment
-    // openConsultationModal();
+    // Étape 3: Démarrez la consultation (si la 3D ne fonctionne pas, ça assure que le HUD apparaît)
+    // Au début, on ouvre la modale de consultation directement pour le premier patient.
+    // Si la 3D fonctionne, commentez cette ligne et laissez le clic 3D gérer l'ouverture.
+    if (!currentScenario) {
+        console.error("Le jeu est bloqué car les données sont manquantes.");
+    } else {
+        openConsultationModal();
+    }
 });
