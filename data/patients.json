@@ -1,1 +1,54 @@
 
+[
+  {
+    "id": "CASE001",
+    "name": "Marc Dupont",
+    "age": 45,
+    "gender": "M",
+    "motif": "Fièvre, fatigue et maux de tête.",
+    "real_pathology": "Grippe A",
+    "pathology_severity": "Moderate",
+    
+    "consultation_data": {
+      "initial_dialogue": "Bonjour Docteur, je suis très fatigué. J'ai eu de la fièvre toute la nuit et ma tête me fait mal.",
+      
+      "symptoms_revealed": {
+        "Interroger sur les Symptômes": [
+          "Fièvre mesurée à 39.5°C.",
+          "Courbatures intenses (myalgies).",
+          "Toux sèche occasionnelle."
+        ],
+        "Interroger sur les Antécédents": [
+          "Aucun antécédent notable.",
+          "Vaccin antigrippal non effectué cette année."
+        ]
+      },
+      
+      "exam_results": {
+        "Prendre la Température": {
+          "result": "39.2°C (Fièvre)",
+          "message": "La température est élevée. Cela confirme la fièvre mentionnée par le patient."
+        },
+        "Auscultation (Cœur/Poumons)": {
+          "result": "Poumons clairs, rythme cardiaque régulier.",
+          "message": "Pas de signes d'infection respiratoire basse (pneumonie)."
+        },
+        "Test Rapide Grippe": {
+          "result": "POSITIF pour la Grippe A.",
+          "message": "Le test confirme rapidement une infection virale."
+        }
+      }
+    },
+    
+    "diagnosis_evaluation": {
+      "correct_diagnosis": "Grippe A",
+      "treatment": {
+        "mandatory": ["Repos", "Hydratation"],
+        "optional_correct": ["Paracétamol (pour la fièvre et douleur)"],
+        "optional_incorrect": ["Antibiotique (Non requis, car viral)"],
+        "outcome_correct": "Le patient se rétablit en 7 jours. Excellent score."
+      }
+    }
+  }
+  // D'autres cas patients suivront ici (Angine, Gastro, etc.)
+]
