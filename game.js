@@ -120,9 +120,46 @@ window.addEventListener('DOMContentLoaded', async function(){
     engine.runRenderLoop(function () {
         scene.render();
     });
+    // À l'intérieur de window.addEventListener('DOMContentLoaded', ...)
 
-    // Gestion du redimensionnement de la fenêtre
+    // --- Fonction pour ouvrir la modale ---
+    function openConsultationModal(patientName) {
+        modal.classList.remove('hidden');
+        hudPatientName.textContent = patientName;
+        isConsultationActive = true;
+        // Détacher le contrôle de la caméra pour figer la vue
+        scene.activeCamera.detachControl(canvas);
+        // Masquer le curseur si nécessaire
+        document.body.style.cursor = 'default';
+    }
+
+    // --- Fonction pour fermer la modale ---
+    function closeConsultationModal() {
+        modal.classList.add('hidden');
+        isConsultationActive = false;
+        // Rattacher le contrôle de la caméra pour permettre le mouvement
+        scene.activeCamera.attachControl(canvas, true);
+        document.body.style.cursor = 'pointer'; // Ou 'default'
+    }
+     // Gestion du redimensionnement de la fenêtre
     window.addEventListener("resize", function () {
         engine.resize();
+    // --- Gestion du bouton Fermer ---
+    closeModalBtn.addEventListener('click', closeConsultationModal);
+
+    // --- Mise à jour de la logique de clic du patient (dans scene.onPointerDown) ---
+    scene.onPointerDown = function (evt) {
+        if (isConsultationActive) return; // Ignorer le clic si la modale est déjà ouverte
+
+        if (evt.button === 0) { // Clic gauche
+            const pickResult = scene.pick(scene.pointerX, scene.pointerY);
+            if (pickResult.hit) {
+                const pickedMesh = pickResult.pickedMesh;
+                
+                // Si l'objet cliqué est le patient
+                if (pickedMesh.name.includes("PATIENT_MESH_RACINE") || pickedMesh.parent && pickedMesh.parent.name.includes("PATIENT_MESH_RACINE")) {
+                    openConsultationModal(currentPatientName); // Ouvrir la modale !
+                }
+            }
     });
 });
