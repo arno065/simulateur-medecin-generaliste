@@ -13,6 +13,25 @@
     <div id="hud-interface">
         <button id="diagnose-btn">Faire un Diagnostic</button>
     <div id="consultation-modal" class="hidden">
+        <div id="diagnostic-modal" class="hidden">
+    <div class="modal-content">
+        <h2>🔬 Soumettre le Diagnostic Final</h2>
+        <form id="diagnosis-form">
+            <label for="input-pathology">Diagnostic Proposé (Pathologie) :</label><br>
+            <input type="text" id="input-pathology" name="pathology" required><br><br>
+
+            <label for="input-prescription">Prescription / Traitement (Liste des actions) :</label><br>
+            <textarea id="input-prescription" name="prescription" required></textarea><br><br>
+            
+            <button type="submit" id="submit-diagnosis-btn">✅ Valider le Diagnostic et Terminer</button>
+            <button type="button" id="cancel-diagnosis-btn" class="close-btn">❌ Annuler et Continuer l'Examen</button>
+        </form>
+
+        <div id="scoring-feedback" style="margin-top: 20px;">
+            </div>
+    </div>
+        </div>
+        
     <div class="modal-content">
         <h2>Consultation : <span id="patient-name-hud">...</span></h2>
         
