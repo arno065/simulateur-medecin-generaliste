@@ -1,0 +1,35 @@
+[
+  {
+    "id": "CASE001",
+    "name": "Marc Dupont",
+    "age": 45,
+    "gender": "M",
+    "motif": "Fièvre et douleurs musculaires",
+    "real_pathology": "Grippe A",
+    "consultation_data": {
+      "initial_dialogue": "Bonjour Docteur, je suis très fatigué. J'ai eu de la fièvre toute la nuit.",
+      "symptoms_revealed": {
+        "Interroger sur les Symptômes": [
+          "Fièvre mesurée à 39.5°C.",
+          "Courbatures intenses."
+        ]
+      },
+      "exam_results": {
+        "Prendre la Température": {
+          "result": "39.2°C",
+          "message": "La température est élevée."
+        },
+        "Auscultation (Cœur/Poumons)": {
+          "result": "Clair",
+          "message": "Poumons et cœur sont normaux."
+        }
+      }
+    },
+    "diagnosis_evaluation": {
+      "correct_diagnosis": "Grippe",
+      "treatment": {
+        "mandatory": ["Repos", "Hydratation", "Paracétamol"]
+      }
+    }
+  }
+]
