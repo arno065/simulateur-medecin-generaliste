@@ -231,6 +231,25 @@ tempBtn.addEventListener('click', () => {
         
         examenLog.scrollTop = examenLog.scrollHeight;
     }
+    // ... (Déclaration des éléments existants) ...
+const poseDiagnosticBtn = document.getElementById('diagnose-btn-hud'); // Bouton dans le HUD principal
+const diagnosticModal = document.getElementById('diagnostic-modal');
+const cancelDiagnosisBtn = document.getElementById('cancel-diagnosis-btn');
+const diagnosisForm = document.getElementById('diagnosis-form'); 
+
+// --- Fonctions d'Ouverture/Fermeture ---
+poseDiagnosticBtn.addEventListener('click', () => {
+    // Masquer le HUD principal et afficher la modale de diagnostic
+    document.getElementById('consultation-modal').classList.add('hidden');
+    diagnosticModal.classList.remove('hidden');
+});
+
+cancelDiagnosisBtn.addEventListener('click', () => {
+    // Masquer la modale de diagnostic et revenir au HUD principal
+    diagnosticModal.classList.add('hidden');
+    document.getElementById('consultation-modal').classList.remove('hidden');
+});
+    
 });
                         
                     }
