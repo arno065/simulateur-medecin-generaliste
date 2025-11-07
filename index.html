@@ -12,6 +12,22 @@
     
     <div id="hud-interface">
         <button id="diagnose-btn">Faire un Diagnostic</button>
+    <div id="consultation-modal" class="hidden">
+    <div class="modal-content">
+        <h2>Consultation : <span id="patient-name-hud">...</span></h2>
+        
+        <div id="examen-log">
+            <p>Le patient est assis devant vous. Que faites-vous ?</p>
+        </div>
+
+        <div id="medical-actions">
+            <button id="ask-symptoms-btn">Interroger sur les Symptômes</button>
+            <button id="auscultate-btn">Auscultation (Cœur/Poumons)</button>
+            <button id="temp-btn">Prendre la Température</button>
+            <button id="diagnose-btn-hud">Poser le Diagnostic</button>
+            <button id="close-modal-btn" class="close-btn">Retour au Cabinet</button>
+        </div>
+    </div>
     </div>
 
     <script src="game.js"></script>
