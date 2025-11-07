@@ -19,3 +19,43 @@ html, body {
     z-index: 10;
     /* Styles pour rendre le HUD visible */
 }
+/* --- Styles du HUD Modale --- */
+#consultation-modal {
+    position: fixed; /* Reste au-dessus de tout */
+    z-index: 100;    /* Assurez-vous qu'il est au-dessus du canvas 3D (z-index: 1) */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Fond semi-transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 700px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    color: #333;
+}
+
+#examen-log {
+    border: 1px solid #ddd;
+    padding: 15px;
+    height: 150px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+}
+
+#medical-actions button {
+    margin-right: 10px;
+}
+
+.hidden {
+    display: none; /* Classe utilisée par JS pour masquer/afficher */
+}
