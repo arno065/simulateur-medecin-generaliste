@@ -191,6 +191,48 @@ window.addEventListener('DOMContentLoaded', async function(){
     examenLog.scrollTop = examenLog.scrollHeight; 
     
     // Désactiver le bouton "Interroger" s'il n'y a plus de questions à poser (logique plus tardive)
+                        // --- Déclaration des éléments du HUD ---
+const askSymptomsBtn = document.getElementById('ask-symptoms-btn');
+const tempBtn = document.getElementById('temp-btn');
+const examenLog = document.getElementById('examen-log');
+
+// --- Logique pour Interroger ---
+askSymptomsBtn.addEventListener('click', () => {
+    if (currentScenario && currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"]) {
+        
+        // Simuler la question du joueur
+        examenLog.innerHTML += `<p class="doctor-action">Vous : Pouvez-vous détailler vos symptômes ?</p>`;
+        
+        // Afficher les réponses stockées dans le JSON
+        currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"].forEach(info => {
+            examenLog.innerHTML += `<p class="patient-response">Patient : ${info}</p>`;
+        });
+        
+        // Supprimer la question une fois qu'elle a été posée pour le réalisme
+        delete currentScenario.consultation_data.symptoms_revealed["Interroger sur les Symptômes"];
+        askSymptomsBtn.disabled = true; 
+        
+        examenLog.scrollTop = examenLog.scrollHeight;
+    } else {
+        examenLog.innerHTML += `<p class="system-message">Vous avez déjà posé toutes les questions pertinentes sur les symptômes.</p>`;
+    }
+});
+
+// --- Logique pour Prendre la Température ---
+tempBtn.addEventListener('click', () => {
+    if (currentScenario && currentScenario.consultation_data.exam_results["Prendre la Température"]) {
+        const result = currentScenario.consultation_data.exam_results["Prendre la Température"];
+        
+        examenLog.innerHTML += `<p class="doctor-action">Vous prenez la température du patient...</p>`;
+        examenLog.innerHTML += `<p class="system-message">Résultat de la mesure (${result.result}) : ${result.message}</p>`;
+        
+        // Désactiver le bouton pour éviter de le refaire
+        tempBtn.disabled = true;
+        
+        examenLog.scrollTop = examenLog.scrollHeight;
+    }
+});
+                        
                     }
                     
                 }
