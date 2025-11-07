@@ -3,47 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Médecin Généraliste - Consultation</title>
+    <title>Simulateur 3D Médecin Généraliste</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>👨‍⚕️ Cabinet Médical Virtuel</h1>
-        <p>Gérez votre consultation et établissez les bons diagnostics.</p>
-    </header>
+    <canvas id="renderCanvas"></canvas>
+    
+    <div id="hud-interface">
+        <button id="diagnose-btn">Faire un Diagnostic</button>
+    </div>
 
-    <main>
-        <section id="patient-info">
-            <h2>Dossier Patient - <span id="nom-patient">En attente</span></h2>
-            <div id="patient-details">
-                <p><strong>Âge:</strong> <span id="age-patient">...</span></p>
-                <p><strong>Motif:</strong> <span id="motif-visite">...</span></p>
-            </div>
-        </section>
-
-        <hr>
-
-        <section id="consultation-interface">
-            <div id="dialogue-box">
-                <p class="patient-line">Patient : Bonjour Docteur, j'ai besoin de votre aide.</p>
-            </div>
-
-            <div id="actions-medecin">
-                <button id="questions" data-action="questions">💬 Interroger</button>
-                <button id="examen" data-action="examen">🩺 Examiner</button>
-                <button id="diagnostiquer" data-action="diagnostiquer">💡 Diagnostiquer</button>
-                <button id="fin-consultation" disabled>✅ Terminer</button>
-            </div>
-
-            <div id="feedback">
-                </div>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 - Projet Open Source</p>
-    </footer>
-
-    <script src="script.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
+
